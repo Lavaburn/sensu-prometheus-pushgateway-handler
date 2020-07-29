@@ -61,10 +61,10 @@ If you're using an earlier version of sensuctl, you can find the asset on the [B
 type: Handler
 api_version: core/v2
 metadata:
-  name: sensu-prometheus-pushgateway-handler
+  name: prometheus-pushgateway-handler
   namespace: default
 spec:
-  command: sensu-prometheus-pushgateway-handler --example example_arg
+  command: sensu-prometheus-pushgateway-handler -u http://pushgateway.example.org:9091/metrics -j node
   type: pipe
   runtime_assets:
   - portertech/sensu-prometheus-pushgateway-handler
