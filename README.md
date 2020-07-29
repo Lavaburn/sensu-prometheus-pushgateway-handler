@@ -2,34 +2,7 @@
 ![Go Test](https://github.com/portertech/sensu-prometheus-pushgateway-handler/workflows/Go%20Test/badge.svg)
 ![goreleaser](https://github.com/portertech/sensu-prometheus-pushgateway-handler/workflows/goreleaser/badge.svg)
 
-# Handler Plugin Template
-
-## Overview
-handler-plugin-template is a template repository which wraps the [Sensu Plugin SDK][2].
-To use this project as a template, click the "Use this template" button from the main project page.
-Once the repository is created from this template, you can use the [Sensu Plugin Tool][9] to
-populate the templated fields with the proper values.
-
-## Functionality
-
-After successfully creating a project from this template, update the `Config` struct with any
-configuration options for the plugin, map those values as plugin options in the variable `options`,
-and customize the `checkArgs` and `executeHandler` functions in [main.go][7].
-
-When writing or updating a plugin's README from this template, review the Sensu Community
-[plugin README style guide][3] for content suggestions and guidance. Remove everything
-prior to `# sensu-prometheus-pushgateway-handler` from the generated README file, and add additional context about the
-plugin per the style guide.
-
-## Releases with Github Actions
-
-To release a version of your project, simply tag the target sha with a semver release without a `v`
-prefix (ex. `1.0.0`). This will trigger the [GitHub action][5] workflow to [build and release][4]
-the plugin with goreleaser. Register the asset with [Bonsai][8] to share it with the community!
-
-***
-
-# sensu-prometheus-pushgateway-handler
+# Prometheus Pushgateway Handler
 
 ## Table of Contents
 - [Overview](#overview)
@@ -38,18 +11,34 @@ the plugin with goreleaser. Register the asset with [Bonsai][8] to share it with
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Handler definition](#handler-definition)
-  - [Annotations](#annotations)
 - [Installation from source](#installation-from-source)
 - [Additional notes](#additional-notes)
 - [Contributing](#contributing)
+- [Release](#releases-with-github-actions)
 
 ## Overview
 
-The sensu-prometheus-pushgateway-handler is a [Sensu Handler][6] that ...
+Push Sensu Go event metrics to a Prometheus Pushgateway. The
+Pushgateway can then be scraped by Prometheus. This handler allows
+users to collect metrics via several means, including 20 year old
+Nagios plugins with perfdata, and store them in Prometheus.
+
+This handler plugin writes Sensu Go event metrics to the Prometheus
+[Pushgateway
+API](https://github.com/prometheus/pushgateway#use-it). The plugin
+uses the Golang Prometheus client to format and push the
+metrics to a configured job (configured via a plugin CLI
+argument). Metrics are expected to already have an `instance`
+label. Prometheus must have `honor_labels: true` in the scrape config
+for the Pushgateway.
 
 ## Files
 
 ## Usage examples
+
+```
+sensu-prometheus-pushgateway-handler -u http://pushgateway.example.org:9091/metrics -j node
+```
 
 ## Configuration
 
@@ -88,24 +77,6 @@ HTTPS_PROXY, and NO_PROXY (or the lowercase versions thereof). HTTPS_PROXY takes
 precedence over HTTP_PROXY for https requests.  The environment values may be
 either a complete URL or a "host[:port]", in which case the "http" scheme is assumed.
 
-### Annotations
-
-All arguments for this handler are tunable on a per entity or check basis based on annotations.  The
-annotations keyspace for this handler is `sensu.io/plugins/sensu-prometheus-pushgateway-handler/config`.
-
-#### Examples
-
-To change the example argument for a particular check, for that checks's metadata add the following:
-
-```yml
-type: CheckConfig
-api_version: core/v2
-metadata:
-  annotations:
-    sensu.io/plugins/sensu-prometheus-pushgateway-handler/config/example-argument: "Example change"
-[...]
-```
-
 ## Installation from source
 
 The preferred way of installing and deploying this plugin is to use it as an Asset. If you would
@@ -123,6 +94,12 @@ go build
 ## Contributing
 
 For more information about contributing to this plugin, see [Contributing][1].
+
+## Releases with Github Actions
+
+To release a version of your project, simply tag the target sha with a semver release without a `v`
+prefix (ex. `1.0.0`). This will trigger the [GitHub action][5] workflow to [build and release][4]
+the plugin with goreleaser. Register the asset with [Bonsai][8] to share it with the community!
 
 [1]: https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [2]: https://github.com/sensu-community/sensu-plugin-sdk
