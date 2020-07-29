@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"fmt"
 
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
@@ -11,7 +11,8 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	Example string
+	URL string
+	Job string
 }
 
 var (
@@ -25,13 +26,22 @@ var (
 
 	options = []*sensu.PluginConfigOption{
 		&sensu.PluginConfigOption{
-			Path:      "example",
-			Env:       "HANDLER_EXAMPLE",
-			Argument:  "example",
-			Shorthand: "e",
+			Path:      "url",
+			Env:       "PUSHGATEWAY_URL",
+			Argument:  "url",
+			Shorthand: "u",
+			Default:   "http://127.0.0.1:9091/metrics",
+			Usage:     "The Prometheus Pushgateway metrics API URL.",
+			Value:     &plugin.URL,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "job",
+			Env:       "PUSHGATEWAY_JOB",
+			Argument:  "job",
+			Shorthand: "j",
 			Default:   "",
-			Usage:     "An example string configuration option",
-			Value:     &plugin.Example,
+			Usage:     "The Prometheus Pushgateway metrics job name (required).",
+			Value:     &plugin.Job,
 		},
 	}
 )
@@ -42,13 +52,14 @@ func main() {
 }
 
 func checkArgs(_ *types.Event) error {
-	if len(plugin.Example) == 0 {
-		return fmt.Errorf("--example or HANDLER_EXAMPLE environment variable is required")
+	if len(plugin.Job) == 0 {
+		return fmt.Errorf("--job or PUSHGATEWAY_JOB environment variable is required")
 	}
 	return nil
 }
 
 func executeHandler(event *types.Event) error {
-	log.Println("executing handler with --example", plugin.Example)
+	log.Println("executing handler with --url", plugin.URL)
+	log.Println("executing handler with --job", plugin.Job)
 	return nil
 }
