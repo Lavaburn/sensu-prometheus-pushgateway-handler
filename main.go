@@ -1,8 +1,12 @@
 package main
 
 import (
-	"log"
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
 
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
@@ -58,8 +62,45 @@ func checkArgs(_ *types.Event) error {
 	return nil
 }
 
+func transformMetrics(event *types.Event) string {
+	p := ""
+	for _, m := range event.Metrics.Points {
+		l := strings.Replace(m.Name, ".", "_", -1)
+		lt := ""
+		for _, t := range m.Tags {
+			if lt != "" {
+				lt = lt + ","
+			}
+			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
+		}
+		if lt != "" {
+			l = l + fmt.Sprintf("{%s}", lt)
+		}
+		p = p + fmt.Sprintf("%s %v\n", l, m.Value)
+	}
+	log.Println(p)
+	return p
+}
+
+func postMetrics(m string) error {
+	url := fmt.Sprintf("%s/job/%s", plugin.URL, plugin.Job)
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(m)))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	log.Println(string(b))
+	return nil
+}
+
 func executeHandler(event *types.Event) error {
 	log.Println("executing handler with --url", plugin.URL)
 	log.Println("executing handler with --job", plugin.Job)
-	return nil
+	m := transformMetrics(event)
+	err := postMetrics(m)
+	return err
 }
