@@ -69,7 +69,7 @@
 		"value": 0.005
 	    },
 	    {
-		"name": "curl_requests_count",
+		"name": "curl_requests.count",
 		"tags": [
 		    {
 			"name": "instance",

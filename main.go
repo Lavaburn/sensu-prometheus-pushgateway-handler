@@ -62,14 +62,18 @@ func checkArgs(_ *types.Event) error {
 	return nil
 }
 
-func transformMetrics(event *types.Event) string {
+func transformMetrics(event *types.Event) (string, string) {
+	inst := ""
 	info := map[string]string{}
 	prom := map[string]string{}
 	for _, m := range event.Metrics.Points {
-		n := strings.Replace(m.Name, ".", "_", -1)
 		mt := "untyped"
 		lt := ""
 		for _, t := range m.Tags {
+			if inst == "" && t.Name == "instance" {
+				inst = t.Value
+				continue
+			}
 			if t.Name == "prometheus_type" {
 				mt = t.Value
 				continue
@@ -79,12 +83,13 @@ func transformMetrics(event *types.Event) string {
 			}
 			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
-		l := n
+		l := strings.Replace(m.Name, ".", "_", -1)
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
-		tn := strings.TrimSuffix(n, "_sum")
+		tn := strings.TrimSuffix(m.Name, "_sum")
 		tn = strings.TrimSuffix(tn, "_count")
+		tn = strings.Replace(tn, ".", "_", -1)
 		if _, ok := info[tn]; !ok {
 			info[tn] = mt
 		}
@@ -95,11 +100,11 @@ func transformMetrics(event *types.Event) string {
 		m = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + m
 	}
 	log.Println(m)
-	return m
+	return inst, m
 }
 
-func postMetrics(m string) error {
-	url := fmt.Sprintf("%s/job/%s", plugin.URL, plugin.Job)
+func postMetrics(i string, m string) error {
+	url := fmt.Sprintf("%s/job/%s/instance/%s", plugin.URL, plugin.Job, i)
 	resp, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(m)))
 	if err != nil {
 		return err
@@ -116,7 +121,7 @@ func postMetrics(m string) error {
 func executeHandler(event *types.Event) error {
 	log.Println("executing handler with --url", plugin.URL)
 	log.Println("executing handler with --job", plugin.Job)
-	m := transformMetrics(event)
-	err := postMetrics(m)
+	i, m := transformMetrics(event)
+	err := postMetrics(i, m)
 	return err
 }
