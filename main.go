@@ -90,7 +90,11 @@ func transformMetrics(event *types.Event) string {
 	}
 	r := ""
 	for n, t := range info {
-		r = r + fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n]
+		if t == "summary" {
+			r = r + fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n]
+			continue
+		}
+		r = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + r
 	}
 	log.Println(r)
 	return r
