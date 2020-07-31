@@ -61,7 +61,7 @@
 		"name": "curl_timings.time_total",
 		"tags": [
 		    {
-			"name": "instance",
+			"name": "prom_instance",
 			"value": "sensu-go-sandbox"
 		    }
 		],
@@ -72,11 +72,15 @@
 		"name": "curl_requests.count",
 		"tags": [
 		    {
-			"name": "instance",
+			"name": "prom_job",
 			"value": "sensu-go-sandbox"
 		    },
 		    {
-			"name": "prometheus_type",
+			"name": "prom_instance",
+			"value": "sensu-go-sandbox"
+		    },
+		    {
+			"name": "prom_type",
 			"value": "counter"
 		    }
 		],

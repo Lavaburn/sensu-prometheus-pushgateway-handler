@@ -38,15 +38,6 @@ var (
 			Usage:     "The Prometheus Pushgateway metrics API URL.",
 			Value:     &plugin.URL,
 		},
-		&sensu.PluginConfigOption{
-			Path:      "job",
-			Env:       "PUSHGATEWAY_JOB",
-			Argument:  "job",
-			Shorthand: "j",
-			Default:   "",
-			Usage:     "The Prometheus Pushgateway metrics job name (required).",
-			Value:     &plugin.Job,
-		},
 	}
 )
 
@@ -56,13 +47,11 @@ func main() {
 }
 
 func checkArgs(_ *types.Event) error {
-	if len(plugin.Job) == 0 {
-		return fmt.Errorf("--job or PUSHGATEWAY_JOB environment variable is required")
-	}
 	return nil
 }
 
-func transformMetrics(event *types.Event) (string, string) {
+func transformMetrics(event *types.Event) (string, string, string) {
+	job := ""
 	inst := ""
 	info := map[string]string{}
 	prom := map[string]string{}
@@ -70,18 +59,23 @@ func transformMetrics(event *types.Event) (string, string) {
 		mt := "untyped"
 		lt := ""
 		for _, t := range m.Tags {
-			if inst == "" && t.Name == "instance" {
-				inst = t.Value
-				continue
-			}
-			if t.Name == "prometheus_type" {
+			switch t.Name {
+			case "prom_job":
+				if job == "" {
+					job = t.Value
+				}
+			case "prom_instance":
+				if inst == "" {
+					inst = t.Value
+				}
+			case "prom_type":
 				mt = t.Value
-				continue
+			default:
+				if lt != "" {
+					lt = lt + ","
+				}
+				lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 			}
-			if lt != "" {
-				lt = lt + ","
-			}
-			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
 		l := strings.Replace(m.Name, ".", "_", -1)
 		if lt != "" {
@@ -100,11 +94,11 @@ func transformMetrics(event *types.Event) (string, string) {
 		m = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + m
 	}
 	log.Println(m)
-	return inst, m
+	return job, inst, m
 }
 
-func postMetrics(i string, m string) error {
-	url := fmt.Sprintf("%s/job/%s/instance/%s", plugin.URL, plugin.Job, i)
+func postMetrics(j string, i string, m string) error {
+	url := fmt.Sprintf("%s/job/%s/instance/%s", plugin.URL, j, i)
 	resp, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(m)))
 	if err != nil {
 		return err
@@ -120,8 +114,7 @@ func postMetrics(i string, m string) error {
 
 func executeHandler(event *types.Event) error {
 	log.Println("executing handler with --url", plugin.URL)
-	log.Println("executing handler with --job", plugin.Job)
-	i, m := transformMetrics(event)
-	err := postMetrics(i, m)
+	j, i, m := transformMetrics(event)
+	err := postMetrics(j, i, m)
 	return err
 }
