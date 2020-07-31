@@ -66,6 +66,7 @@ func transformMetrics(event *types.Event) string {
 	info := map[string]string{}
 	prom := map[string]string{}
 	for _, m := range event.Metrics.Points {
+		n := strings.Replace(m.Name, ".", "_", -1)
 		mt := "untyped"
 		lt := ""
 		for _, t := range m.Tags {
@@ -78,24 +79,23 @@ func transformMetrics(event *types.Event) string {
 			}
 			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
-		n := strings.Replace(m.Name, ".", "_", -1)
-		nt := strings.TrimSuffix(n, "_sum")
-		nt = strings.TrimSuffix(nt, "_count")
-		if _, ok := info[nt]; !ok {
-			info[nt] = mt
-		}
 		l := n
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
-		prom[nt] = prom[nt] + fmt.Sprintf("%s %v\n", l, m.Value)
+		tn := strings.TrimSuffix(n, "_sum")
+		tn = strings.TrimSuffix(tn, "_count")
+		if _, ok := info[tn]; !ok {
+			info[tn] = mt
+		}
+		prom[tn] = prom[tn] + fmt.Sprintf("%s %v\n", l, m.Value)
 	}
-	r := ""
+	m := ""
 	for n, t := range info {
-		r = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + r
+		m = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + m
 	}
-	log.Println(r)
-	return r
+	log.Println(m)
+	return m
 }
 
 func postMetrics(m string) error {
