@@ -80,7 +80,7 @@ func transformMetrics(event *types.Event) string {
 		}
 		n := strings.Replace(m.Name, ".", "_", -1)
 		nt := strings.TrimSuffix(n, "_sum")
-		nt = strings.TrimSuffix(n, "_count")
+		nt = strings.TrimSuffix(nt, "_count")
 		if _, ok := info[nt]; !ok {
 			info[nt] = mt
 		}
