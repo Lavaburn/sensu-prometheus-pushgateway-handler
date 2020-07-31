@@ -63,6 +63,7 @@ func checkArgs(_ *types.Event) error {
 }
 
 func transformMetrics(event *types.Event) string {
+	info := map[string]string{}
 	p := ""
 	for _, m := range event.Metrics.Points {
 		mt := "gauge"
@@ -78,11 +79,17 @@ func transformMetrics(event *types.Event) string {
 			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
 		n := strings.Replace(m.Name, ".", "_", -1)
-		l := fmt.Sprintf("# TYPE %s %s\n%s", n, mt, n)
+		if _, ok := info[n]; !ok {
+			info[n] = mt
+		}
+		l := n
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
 		p = p + fmt.Sprintf("%s %v\n", l, m.Value)
+	}
+	for n, t := range info {
+		p = fmt.Sprintf("# TYPE %s %s\n", n, t) + p
 	}
 	log.Println(p)
 	return p
