@@ -82,13 +82,13 @@ func transformMetrics(event *types.Event) string {
 		nt := strings.TrimSuffix(n, "_sum")
 		nt = strings.TrimSuffix(n, "_count")
 		if _, ok := info[nt]; !ok {
-			info[n] = mt
+			info[nt] = mt
 		}
 		l := n
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
-		prom[n] = prom[n] + fmt.Sprintf("%s %v\n", l, m.Value)
+		prom[nt] = prom[nt] + fmt.Sprintf("%s %v\n", l, m.Value)
 	}
 	r := ""
 	for n, t := range info {
