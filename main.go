@@ -66,7 +66,7 @@ func transformMetrics(event *types.Event) string {
 	info := map[string]string{}
 	p := ""
 	for _, m := range event.Metrics.Points {
-		mt := "gauge"
+		mt := "untyped"
 		lt := ""
 		for _, t := range m.Tags {
 			if t.Name == "prometheus_type" {
