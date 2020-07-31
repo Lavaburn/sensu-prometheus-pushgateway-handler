@@ -64,7 +64,7 @@ func checkArgs(_ *types.Event) error {
 
 func transformMetrics(event *types.Event) string {
 	info := map[string]string{}
-	p := ""
+	prom := map[string]string{}
 	for _, m := range event.Metrics.Points {
 		mt := "untyped"
 		lt := ""
@@ -86,13 +86,14 @@ func transformMetrics(event *types.Event) string {
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
-		p = p + fmt.Sprintf("%s %v\n", l, m.Value)
+		prom[n] = prom[n] + fmt.Sprintf("%s %v\n", l, m.Value)
 	}
+	r := ""
 	for n, t := range info {
-		p = fmt.Sprintf("# TYPE %s %s\n", n, t) + p
+		r = r + fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n]
 	}
-	log.Println(p)
-	return p
+	log.Println(r)
+	return r
 }
 
 func postMetrics(m string) error {
