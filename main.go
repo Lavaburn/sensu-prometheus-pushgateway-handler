@@ -79,7 +79,9 @@ func transformMetrics(event *types.Event) string {
 			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
 		n := strings.Replace(m.Name, ".", "_", -1)
-		if _, ok := info[n]; !ok {
+		nt := strings.TrimSuffix(n, "_sum")
+		nt = strings.TrimSuffix(n, "_count")
+		if _, ok := info[nt]; !ok {
 			info[n] = mt
 		}
 		l := n
@@ -90,10 +92,6 @@ func transformMetrics(event *types.Event) string {
 	}
 	r := ""
 	for n, t := range info {
-		if t == "summary" {
-			r = r + fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n]
-			continue
-		}
 		r = fmt.Sprintf("# TYPE %s %s\n", n, t) + prom[n] + r
 	}
 	log.Println(r)
