@@ -65,14 +65,20 @@ func checkArgs(_ *types.Event) error {
 func transformMetrics(event *types.Event) string {
 	p := ""
 	for _, m := range event.Metrics.Points {
-		l := strings.Replace(m.Name, ".", "_", -1)
+		mt := "gauge"
 		lt := ""
 		for _, t := range m.Tags {
+			if t.Name == "prometheus_type" {
+				mt = t.Value
+				continue
+			}
 			if lt != "" {
 				lt = lt + ","
 			}
 			lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
 		}
+		n := strings.Replace(m.Name, ".", "_", -1)
+		l := fmt.Sprintf("# TYPE %s %s\n%s", n, mt, n)
 		if lt != "" {
 			l = l + fmt.Sprintf("{%s}", lt)
 		}
@@ -84,7 +90,7 @@ func transformMetrics(event *types.Event) string {
 
 func postMetrics(m string) error {
 	url := fmt.Sprintf("%s/job/%s", plugin.URL, plugin.Job)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(m)))
+	resp, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(m)))
 	if err != nil {
 		return err
 	}

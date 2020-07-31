@@ -67,6 +67,21 @@
 		],
 		"timestamp": 1552506033,
 		"value": 0.005
+	    },
+	    {
+		"name": "curl_requests_count",
+		"tags": [
+		    {
+			"name": "instance",
+			"value": "sensu-go-sandbox"
+		    },
+		    {
+			"name": "prometheus_type",
+			"value": "counter"
+		    }
+		],
+		"timestamp": 1552506033,
+		"value": 2
 	    }
 	]
     },
