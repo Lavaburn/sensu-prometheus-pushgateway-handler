@@ -83,6 +83,7 @@ func transformMetrics(event *types.Event) (string, string, string) {
 		}
 		tn := strings.TrimSuffix(m.Name, "_sum")
 		tn = strings.TrimSuffix(tn, "_count")
+		tn = strings.TrimSuffix(tn, "_bucket")
 		tn = strings.Replace(tn, ".", "_", -1)
 		if _, ok := info[tn]; !ok {
 			info[tn] = mt
