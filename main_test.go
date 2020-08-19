@@ -13,6 +13,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestPostMetrics(t *testing.T) {
+	assert := assert.New(t)
+
+	var apiStub = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := ioutil.ReadAll(r.Body)
+		expectedBody := `go_gc_duration_seconds{quantile="0"} 3.4204e-05`
+		assert.Contains(string(body), expectedBody)
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`ok`))
+		require.NoError(t, err)
+	}))
+
+	plugin.URL = apiStub.URL
+	m := "# TYPE go_gc_duration_seconds summary\ngo_gc_duration_seconds{quantile=\"0\"} 3.4204e-05\n"
+	err := postMetrics("foo", "bar", m)
+	assert.NoError(err)
+}
+
 func TestMain(t *testing.T) {
 	assert := assert.New(t)
 	file, _ := ioutil.TempFile(os.TempDir(), "sensu-prometheus-pushgateway-handler-")
