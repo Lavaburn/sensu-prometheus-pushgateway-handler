@@ -13,6 +13,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestTransformMetrics(t *testing.T) {
+	assert := assert.New(t)
+	event := corev2.FixtureEvent("entity1", "check1")
+	event.Check = nil
+	event.Metrics = corev2.FixtureMetrics()
+	plugin.DefaultType = "untyped"
+	job, inst, m := transformMetrics(event)
+	em := "# TYPE answer untyped\nanswer{foo=\"bar\"} 42\n"
+	assert.Contains(m, em)
+	assert.Equal(job, "")
+	assert.Equal(inst, "")
+	plugin.DefaultType = "gauge"
+	plugin.DefaultJob = "foo"
+	plugin.DefaultInstance = "bar"
+	job, inst, m = transformMetrics(event)
+	em = "# TYPE answer gauge\nanswer{foo=\"bar\"} 42\n"
+	assert.Contains(m, em)
+	assert.Equal(job, "foo")
+	assert.Equal(inst, "bar")
+}
+
 func TestPostMetrics(t *testing.T) {
 	assert := assert.New(t)
 
