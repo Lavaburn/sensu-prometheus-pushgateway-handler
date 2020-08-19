@@ -20,17 +20,18 @@
 
 Push Sensu Go event metrics to a Prometheus Pushgateway. The
 Pushgateway can then be scraped by Prometheus. This handler allows
-users to collect metrics via several means, including 20 year old
+users to collect metrics via several means, including 20+ year old
 Nagios plugins with perfdata, and store them in Prometheus.
 
 This handler plugin writes Sensu Go event metrics to the Prometheus
 [Pushgateway
-API](https://github.com/prometheus/pushgateway#use-it). The plugin
-uses the Golang Prometheus client to format and push the
-metrics to a configured job (configured via a plugin CLI
-argument). Metrics are expected to already have an `instance`
-label. Prometheus must have `honor_labels: true` in the scrape config
-for the Pushgateway.
+API](https://github.com/prometheus/pushgateway#use-it). The plugin can
+be configured with a default Prometheus metric type, job name, and
+instance name. A Sensu Go event metric point can specify its own
+Prometheus metric type, job name, or instance name via its metric
+tags, e.g. `"prom_type": "gauge"`, `"prom_job": "node"`, and
+`"prom_instance": "i-424242"`. Prometheus must have `honor_labels:
+true` in the scrape config for the Pushgateway.
 
 ## Files
 
@@ -38,6 +39,32 @@ for the Pushgateway.
 
 ```
 sensu-prometheus-pushgateway-handler -u http://pushgateway.example.org:9091/metrics -j node
+```
+
+```
+$ sensu-prometheus-pushgateway-handler -h
+
+Send Sensu Go event metrics to the Prometheus Pushgateway.
+
+Usage:
+  sensu-prometheus-pushgateway-handler [flags]
+  sensu-prometheus-pushgateway-handler [command]
+
+Available Commands:
+  help        Help about any command
+  version     Print the version number of this plugin
+
+Flags:
+  -d, --debug                     Turn on debug mode (i.e. print the post body metrics).
+  -i, --default-instance string   The Prometheus instance name to use when metrics do not have a prom_instance tag.
+  -j, --default-job string        The Prometheus job name to use when metrics do not have a prom_job tag.
+  -t, --default-type string       The Prometheus metric type to use when metrics do not have a prom_type tag. (default "untyped")
+  -h, --help                      help for sensu-prometheus-pushgateway-handler
+  -I, --instance string           The Prometheus instance name to use, ignoring metric prom_instance tags.
+  -J, --job string                The Prometheus job name to use, ignoring metric prom_job tags.
+  -u, --url string                The Prometheus Pushgateway metrics API URL. (default "http://127.0.0.1:9091/metrics")
+
+Use "sensu-prometheus-pushgateway-handler [command] --help" for more information about a command.
 ```
 
 ## Configuration
