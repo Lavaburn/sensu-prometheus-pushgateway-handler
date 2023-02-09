@@ -1,6 +1,6 @@
-[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/portertech/sensu-prometheus-pushgateway-handler)
-![Go Test](https://github.com/portertech/sensu-prometheus-pushgateway-handler/workflows/Go%20Test/badge.svg)
-![goreleaser](https://github.com/portertech/sensu-prometheus-pushgateway-handler/workflows/goreleaser/badge.svg)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/Lavaburn/sensu-prometheus-pushgateway-handler)
+![Go Test](https://github.com/Lavaburn/sensu-prometheus-pushgateway-handler/workflows/Go%20Test/badge.svg)
+![goreleaser](https://github.com/Lavaburn/sensu-prometheus-pushgateway-handler/workflows/goreleaser/badge.svg)
 
 # Prometheus Pushgateway Handler
 
@@ -76,10 +76,10 @@ consider doing so! If you're using sensuctl 5.13 with Sensu Backend 5.13 or late
 following command to add the asset:
 
 ```
-sensuctl asset add portertech/sensu-prometheus-pushgateway-handler
+sensuctl asset add Lavaburn/sensu-prometheus-pushgateway-handler
 ```
 
-If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/portertech/sensu-prometheus-pushgateway-handler].
+If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/Lavaburn/sensu-prometheus-pushgateway-handler].
 
 ### Handler definition
 
@@ -94,7 +94,7 @@ spec:
   command: sensu-prometheus-pushgateway-handler -u http://pushgateway.example.org:9091/metrics -j node
   type: pipe
   runtime_assets:
-  - portertech/sensu-prometheus-pushgateway-handler
+  - Lavaburn/sensu-prometheus-pushgateway-handler
 ```
 
 #### Proxy Support
@@ -114,6 +114,21 @@ From the local path of the sensu-prometheus-pushgateway-handler repository:
 
 ```
 go build
+```
+
+## 0.1.0 - Forked from portertech
+
+Extra argument enables more "group labels" than just job and instance.
+
+Push Gateway only accepts (overwrites) metrics with the same name and group label.
+This module hard-coded -instance- and -job- as the group labels.
+
+I wanted to use a single metric name with labels for entity name (re-using instance) and check name (without overwriting job)
+
+```
+Flags:
+  -e, --extra-group-labels string   Tags that should be treated as group labels (comma-separated).
+
 ```
 
 ## Additional notes

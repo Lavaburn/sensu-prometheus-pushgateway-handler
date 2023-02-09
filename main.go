@@ -15,13 +15,14 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	URL             string
-	DefaultJob      string
-	DefaultInstance string
-	DefaultType     string
-	Job             string
-	Instance        string
-	Debug           bool
+	URL        			string
+	DefaultJob      	string
+	DefaultInstance 	string
+	DefaultType     	string
+	Job             	string
+	Instance        	string
+	Debug           	bool
+	ExtraGroupLabels	string
 }
 
 var (
@@ -97,6 +98,15 @@ var (
 			Usage:     "Turn on debug mode (i.e. print the post body metrics).",
 			Value:     &plugin.Debug,
 		},
+		&sensu.PluginConfigOption{
+			Path:      "extra-group-labels",
+			Env:       "EXTRA_GROUP_LABELS",
+			Argument:  "extra-group-labels",
+			Shorthand: "e",
+			Default:   "",
+			Usage:     "Tags that should be treated as group labels (comma-separated).",
+			Value:     &plugin.ExtraGroupLabels,
+		},
 	}
 )
 
@@ -109,7 +119,7 @@ func checkArgs(_ *types.Event) error {
 	return nil
 }
 
-func transformMetrics(event *types.Event) (string, string, string) {
+func transformMetrics(event *types.Event) (string, string, string, map[string]string) {
 	// The default job name will be overriden by a metric
 	// "prom_job" tag value.
 	job := plugin.DefaultJob
@@ -126,6 +136,12 @@ func transformMetrics(event *types.Event) (string, string, string) {
 	if plugin.Instance != "" {
 		inst = plugin.Instance
 	}
+	// Split arg (comma-separated)
+	var groupTags []string
+	if plugin.ExtraGroupLabels != "" {
+		groupTags = strings.Split(plugin.ExtraGroupLabels, ",")
+	}	
+	groupLabels := map[string]string{}
 	// All lines for a given metric must be provided as one single
 	// group, with the TYPE token line first. A map is used to
 	// create groups from unordered Sensu Go metric points.
@@ -157,6 +173,13 @@ func transformMetrics(event *types.Event) (string, string, string) {
 				}
 				// Regular Prometheus label key/value pair.
 				lt = lt + fmt.Sprintf("%s=\"%s\"", t.Name, t.Value)
+				
+				// Check for extra Group Labels
+				for _, v := range groupTags {
+					if v == t.Name {
+						groupLabels[t.Name] = t.Value
+					}
+				}
 			}
 		}
 		// Prometheus histograms and summaries use special
@@ -190,11 +213,15 @@ func transformMetrics(event *types.Event) (string, string, string) {
 	if plugin.Debug {
 		log.Println(m)
 	}
-	return job, inst, m
+	return job, inst, m, groupLabels
 }
 
-func postMetrics(j string, i string, m string) error {
+func postMetrics(j string, i string, m string, groupLabels map[string]string) error {
 	url := fmt.Sprintf("%s/job/%s/instance/%s", plugin.URL, j, i)
+	for tagName, tagValue := range groupLabels {
+		url = url + "/" + tagName + "/" + tagValue
+	}
+	
 	resp, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(m)))
 	if err != nil {
 		return err
@@ -217,8 +244,9 @@ func executeHandler(event *types.Event) error {
 		log.Println("executing handler with --job", plugin.Job)
 		log.Println("executing handler with --instance", plugin.Instance)
 		log.Println("executing handler with --debug", plugin.Debug)
+		log.Println("executing handler with --extra-group-labels", plugin.ExtraGroupLabels)
 	}
-	j, i, m := transformMetrics(event)
-	err := postMetrics(j, i, m)
+	j, i, m, groupLabels := transformMetrics(event)
+	err := postMetrics(j, i, m, groupLabels)
 	return err
 }

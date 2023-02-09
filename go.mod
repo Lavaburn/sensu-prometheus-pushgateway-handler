@@ -1,4 +1,4 @@
-module github.com/portertech/sensu-prometheus-pushgateway-handler
+module github.com/Lavaburn/sensu-prometheus-pushgateway-handler
 
 go 1.13
 
